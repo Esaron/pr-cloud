@@ -17,12 +17,12 @@ puts 'Dependencies installed'
 
 TOKEN = ENV['GH_ACCESS_TOKEN']
 USER = ENV['GH_USER']
-CLIENT = Octokit::Client.new(access_token: TOKEN, per_page: 100)
+CLIENT = Octokit::Client.new(access_token: TOKEN, per_page: 100, auto_paginate: true)
 
-pr_word_counts = CLIENT.search_issues("org:#{OWNER} repo:#{REPO} state:closed author:#{USER} type:pr").items.map { |pr| pr.title&.split&.tally }.compact
+pr_word_counts = CLIENT.search_issues("repo:#{OWNER_REPO} state:closed author:#{USER} type:pr").items.map { |pr| pr.title&.split&.tally }.compact
 words = pr_word_counts.each_with_object({}) do |pr_word_count, memo|
   pr_word_count.each { |word, count| memo[word] = (memo[word] || 0) + count }
 end.sort { |a, b| b[1] <=> a[1] }.to_a.first(50)
-cloud = MagicCloud::Cloud.new(words, rotate: :free)
+cloud = MagicCloud::Cloud.new(words, rotate: :free, scale: :log)
 img = cloud.draw(1280, 720)
 img.write('cloud.png')
